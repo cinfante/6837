@@ -144,7 +144,7 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 	//f[0] = Vector3f(0.0,0.0,0.5);
 	f[1] = Vector3f(0.0,0.0,0.0);
 	//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,0.5);
-	f[2*pow(m_vVecState.size()/2,0.5)-1] = Vector3f(0.0,0.0,0.0);
+	//f[2*pow(m_vVecState.size()/2,0.5)-1] = Vector3f(0.0,0.0,0.0);
 	if (moving){
 		//counter++;
 		if (counter < 800){
