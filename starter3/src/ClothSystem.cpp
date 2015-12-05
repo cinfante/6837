@@ -25,6 +25,7 @@ ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
 
 	structural = springs2;
 	springs = springs2;
+	m_numParticles = numParticles;
 
 	//shear springs
 	Vector4f forwardSlash, backwardSlash;
@@ -121,7 +122,7 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 		for (int j = 0; j < sprs.size(); j++){
 			
 			Vector4f spring = sprs[j];
-			spring.print();
+			//spring.print();
 			int p1Index = spring[0];
 			int p2Index = spring[1];
 			float rest = spring[2];
@@ -174,6 +175,8 @@ void ClothSystem::draw()
 	//glTranslatef(0,0,0);
 	//glutSolidSphere(0.075f, 10.0f, 10.0f);
 	//glPopMatrix();
+	collision();
+	//std::cout << "first" << std::endl;
 
 	for (int i = 0; i < m_vVecState.size()/2.; i++) {
 		
@@ -219,3 +222,26 @@ void ClothSystem::draw()
 	
 }
 
+
+void ClothSystem::collision(){
+	Vector3f org = Vector3f(2.0f, -2.0f, 0.0f);
+	float r = 1.0f;
+	//std::cout << "here" << std::endl;
+	
+
+	for (int i = 0; i < m_numParticles; i++){
+		//std::cout << "here" << std::endl;
+		for (int j = 0; j < m_numParticles; j++){
+			Vector3f part = m_vVecState[i*m_numParticles+j*2];
+			float pos = pow(org.x()-part.x(),2)+pow(org.y()-part.y(),2)+pow(org.z()-part.z(),2);
+			std::cout << pos << std::endl;
+			if (pos < pow(r,2)){
+				Vector3f unit = (part-org).normalized();
+				Vector3f newPos = r*unit + org;
+				m_vVecState[i*m_numParticles+j*2] = newPos;
+			}
+
+		}
+	}
+
+}

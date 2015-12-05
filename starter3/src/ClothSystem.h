@@ -17,6 +17,7 @@ public:
 	void move();
 	void wireframe();
 	void drawI(int i);
+	void collision();
 
 private:
 	bool moving = false;
