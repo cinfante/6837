@@ -1,2 +1,0 @@
-/afs/athena.mit.edu/user/c/i/cinfante/starter3/build/src/CMakeFiles/a3.dir
-/afs/athena.mit.edu/user/c/i/cinfante/starter3/build/vecmath/CMakeFiles/vecmath.dir

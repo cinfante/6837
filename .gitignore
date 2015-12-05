@@ -1,3 +1,6 @@
+starter3/build/
+starter3/inst/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
@@ -41,3 +44,7 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+starter3/build
+

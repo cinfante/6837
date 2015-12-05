@@ -63,7 +63,7 @@ ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
 	for (int i = 0; i < numParticles; i++){
 		for (int j = 0; j < numParticles; j++){
 
-			m_vVecState.push_back(Vector3f(0.0f + j * 0.5f, i * -0.5f, 0.0f));
+			m_vVecState.push_back(Vector3f(0.0f + j * 0.5f, 0.0f, i * 0.5f));
 			m_vVecState.push_back(Vector3f(0.0f, 0.0f, 0.0f));
 
 		}
@@ -169,6 +169,12 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 void ClothSystem::draw()
 {
 	
+	//Draw sphere
+	//glPushMatrix();
+	//glTranslatef(0,0,0);
+	//glutSolidSphere(0.075f, 10.0f, 10.0f);
+	//glPopMatrix();
+
 	for (int i = 0; i < m_vVecState.size()/2.; i++) {
 		
 		Vector3f pos = m_vVecState[2*i] ;//  position of particle i. YOUR CODE HERE
@@ -177,7 +183,7 @@ void ClothSystem::draw()
 		glutSolidSphere(0.075f,10.0f,10.0f);
 		glPopMatrix();
 	}
-
+	
 
 	if (springsForChosenParticle.size() == 0){
 		for (int i = 0; i < structural.size(); i++){
