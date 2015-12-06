@@ -23,6 +23,8 @@ private:
 	bool moving = false;
 	int counter = 0;
 	bool drawBool = true;
+	vector<bool> part_col;
+	vector<Vector3f> col_norm;
 };
 
 #endif

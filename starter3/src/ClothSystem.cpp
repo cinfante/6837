@@ -66,6 +66,8 @@ ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
 
 			m_vVecState.push_back(Vector3f(0.0f + j * 0.5f, 0.0f, i * 0.5f));
 			m_vVecState.push_back(Vector3f(0.0f, 0.0f, 0.0f));
+			part_col.push_back(false);
+			col_norm.push_back(Vector3f(0,0,0));
 
 		}
 	}
@@ -115,6 +117,7 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 		Vector3f gravity = Vector3f(0.0f, gravF, 0.0f); //affects y
 		//viscous drag
 		float k = 2.5f;
+		float u_f = 0.3f;
 		Vector3f  velocity3f = state[i+1];
 		Vector3f viscousDrag = velocity3f * -k;
 		Vector3f springForce = Vector3f(0.0f,0.0f,0.0f);
@@ -134,8 +137,22 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 			
 			springForce += -stiff*(d.abs() - rest) * (d/d.abs());
 		}
+		Vector3f fric = Vector3f(0,0,0);
+		if (part_col[i/2]){
+			Vector3f n = -col_norm[i/2];
+			Vector3f n_force = Vector3f(0,0,0);
+			if (n.abs() != 0){
+				n_force = Vector3f().dot(gravity,n)/n.abs()*n;
+			}
+			n_force.negate();
+			fric = u_f * n_force;
+			Vector3f net = gravity + n_force + springForce;
+			if (fric.abs() > net.abs()){
+				fric = net;
+			}
+		}
 		
-		Vector3f finalForce = (gravity + viscousDrag + springForce)/m;// gravity + viscousDrag + springForce;
+		Vector3f finalForce = (gravity + viscousDrag + springForce - fric)/m;// gravity + viscousDrag + springForce;
 		
 		f.push_back(finalForce); 
 		
@@ -150,11 +167,11 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 		if (counter < 800){
 			//move forward
 			counter++;
-			f[0] = Vector3f(0.5,0.0,0.5);
+			f[0] = Vector3f(-0.5,0.0,-0.5);
 			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,1.0);
 		}
 		else if (counter < 1600){
-			f[0] = Vector3f(-0.5,0.0,-0.5);
+			f[0] = Vector3f(0.5,0.0,0.5);
 			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,-1.0);
 			counter++;
 		}
@@ -229,16 +246,22 @@ void ClothSystem::collision(){
 	//std::cout << "here" << std::endl;
 	
 
-	for (int i = 0; i < m_numParticles; i++){
+	for (int i = m_numParticles-1; i >= 0; i--){
 		//std::cout << "here" << std::endl;
 		for (int j = 0; j < m_numParticles; j++){
 			Vector3f part = m_vVecState[i*m_numParticles+j*2];
-			float pos = pow(org.x()-part.x(),2)+pow(org.y()-part.y(),2)+pow(org.z()-part.z(),2);
+			float pos = pow(-org.x()+part.x(),2)+pow(-org.y()+part.y(),2)+pow(-org.z()+part.z(),2);
 			std::cout << pos << std::endl;
 			if (pos < pow(r,2)){
 				Vector3f unit = (part-org).normalized();
 				Vector3f newPos = r*unit + org;
 				m_vVecState[i*m_numParticles+j*2] = newPos;
+				part_col[i*m_numParticles+j] = true;
+				col_norm[i*m_numParticles+j] = unit;
+			}
+			else{
+				
+				part_col[i*m_numParticles+j] = false;
 			}
 
 		}
