@@ -92,7 +92,7 @@ namespace
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, particleColor);
     
     glPushMatrix();
-    glTranslatef(2.0f,-2.0f,0.0f);
+    glTranslatef(1.0f,-2.0f,1.0f);
     glutSolidSphere(1.0f,10.0f,10.0f);
     glPopMatrix();
     

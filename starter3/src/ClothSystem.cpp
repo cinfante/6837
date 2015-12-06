@@ -150,12 +150,12 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 		if (counter < 800){
 			//move forward
 			counter++;
-			f[0] = Vector3f(0.0,0.0,0.5);
-			f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,1.0);
+			f[0] = Vector3f(0.5,0.0,0.5);
+			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,1.0);
 		}
 		else if (counter < 1600){
-			f[0] = Vector3f(0.0,0.0,-0.5);
-			f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,-1.0);
+			f[0] = Vector3f(-0.5,0.0,-0.5);
+			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,-1.0);
 			counter++;
 		}
 		if (counter >= 1600){
@@ -224,7 +224,7 @@ void ClothSystem::draw()
 
 
 void ClothSystem::collision(){
-	Vector3f org = Vector3f(2.0f, -2.0f, 0.0f);
+	Vector3f org = Vector3f(1.0f, -2.0f, 1.0f);
 	float r = 1.0f;
 	//std::cout << "here" << std::endl;
 	
