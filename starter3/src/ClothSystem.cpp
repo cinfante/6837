@@ -192,7 +192,10 @@ void ClothSystem::draw()
 	//glTranslatef(0,0,0);
 	//glutSolidSphere(0.075f, 10.0f, 10.0f);
 	//glPopMatrix();
-	collision();
+//	naiveBVH();
+	if (naiveBVH()){
+		collision();
+	}
 	//std::cout << "first" << std::endl;
 
 	for (int i = 0; i < m_vVecState.size()/2.; i++) {
@@ -245,13 +248,14 @@ void ClothSystem::collision(){
 	float r = 1.0f;
 	//std::cout << "here" << std::endl;
 	
-
+//	int counter = 0;
 	for (int i = m_numParticles-1; i >= 0; i--){
 		//std::cout << "here" << std::endl;
 		for (int j = 0; j < m_numParticles; j++){
+//			counter++;
 			Vector3f part = m_vVecState[i*m_numParticles+j*2];
 			float pos = pow(-org.x()+part.x(),2)+pow(-org.y()+part.y(),2)+pow(-org.z()+part.z(),2);
-			std::cout << pos << std::endl;
+	//		std::cout << pos << std::endl;
 			if (pos < pow(r,2)){
 				Vector3f unit = (part-org).normalized();
 				Vector3f newPos = r*unit + org;
@@ -266,5 +270,75 @@ void ClothSystem::collision(){
 
 		}
 	}
+	cerr << counter << "\n";
 
 }
+
+bool ClothSystem::naiveBVH(){
+
+	float staticSphereRadius = 1.0f;
+	Vector3f staticSphereCenter = Vector3f(1.0f,-2.0f,1.0f);
+
+	Vector3f sphereCenter;
+	Vector3f firstParticlePos = m_vVecState[0];
+	Vector3f lastParticlePos = m_vVecState[2 * (pow(m_numParticles,2) - 1)];
+	
+
+	
+	if (m_numParticles % 2 == 0){
+		float centerX = (firstParticlePos.x() + lastParticlePos.x())/2.0f;
+		float centerY = (firstParticlePos.y() + lastParticlePos.y())/2.0f;
+		float centerZ = (firstParticlePos.z() + lastParticlePos.z())/2.0f;
+
+	//	cerr << "CENTER " << centerX << " " << centerY << " " << centerZ << "\n";		
+	//	cerr << "FIRST " << firstParticlePos.y() << " " << lastParticlePos.y() << "\n";
+
+		sphereCenter = Vector3f(centerX, centerY, centerZ);
+	}
+	else{
+		Vector3f sphereCenter = m_vVecState[pow(m_numParticles,2.0f) - 1];
+//		cerr << "CENTER " << lastParticlePos.x() << " " << lastParticlePos.y() << " " << lastParticlePos.z() << "\n";
+	}	
+	float firstPow = pow(lastParticlePos.x() - sphereCenter.x(),2.0f);
+	float secondPow = pow(lastParticlePos.y() - sphereCenter.y(),2.0f);
+	float thirdPow = pow(lastParticlePos.z() - sphereCenter.z(),2.0f);
+	float sphereRadius = sqrt(firstPow + secondPow + thirdPow);
+	
+	Vector3f distanceVector = sphereCenter - staticSphereCenter;
+
+	float distanceBetweenCenters = distanceVector.abs();
+	float radiiSum = staticSphereRadius + sphereRadius;
+	
+	//cerr << radiiSum << " -------- " << distanceBetweenCenters << "\n";
+
+	if (radiiSum > distanceBetweenCenters){
+	
+		cerr << "TRUE\n";
+		return true;
+	}
+	//cerr << "FALSE\n";
+	return false;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

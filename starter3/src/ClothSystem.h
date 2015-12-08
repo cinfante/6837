@@ -18,6 +18,7 @@ public:
 	void wireframe();
 	void drawI(int i);
 	void collision();
+	bool naiveBVH();
 
 private:
 	bool moving = false;
