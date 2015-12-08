@@ -194,6 +194,7 @@ void ClothSystem::draw()
 	//glutSolidSphere(0.075f, 10.0f, 10.0f);
 	//glPopMatrix();
 //	naiveBVH();
+	sphereToParticleIndicies();
 	if (naiveBVH()){
 		collision();
 	}
@@ -254,13 +255,13 @@ void ClothSystem::collision(){
 		//std::cout << "here" << std::endl;
 		for (int j = 0; j < m_numParticles; j++){
 //			counter++;
-			Vector3f part = m_vVecState[i*m_numParticles+j*2];
+			Vector3f part = m_vVecState[(i*m_numParticles+j)*2];
 			float pos = pow(-org.x()+part.x(),2)+pow(-org.y()+part.y(),2)+pow(-org.z()+part.z(),2);
 	//		std::cout << pos << std::endl;
 			if (pos < pow(r,2)){
 				Vector3f unit = (part-org).normalized();
 				Vector3f newPos = r*unit + org;
-				m_vVecState[i*m_numParticles+j*2] = newPos;
+				m_vVecState[(i*m_numParticles+j)*2] = newPos;
 				part_col[i*m_numParticles+j] = true;
 				col_norm[i*m_numParticles+j] = unit;
 			}
@@ -334,24 +335,57 @@ void ClothSystem::sphereToParticleIndicies(){
 	
 	
 	
-	if (m_numParticles % 2 == 0){
-		float counter = 3.0;
+	if (m_numParticles == 8){
+		int counter = 5;
 		//building the 16 subspheres
-		map<float, vector<int>> level3ToIndicies;
+		map<int, vector<int>> allSpheres;
 		for (int j = 0; j < m_numParticles - 1; j += 2){
 			
 			for (int i = 0; i < m_numParticles - 1; i += 2){
+				cerr << "COUNTER " << counter << "\n";					
 				vector<int> subsphereIndices;
-				subsphereIndices.push_back(j * m_numParticles + i * 2);
-				subsphereIndices.push_back((j + 1) * m_numParticles + i * 2);
-				subsphereIndices.push_back((j + 1) * m_numParticles + (i + 1) * 2);
-				subsphereIndices.push_back(j * m_numParticles + (i + 1) * 2);
-				level3ToIndicies[counter] = subsphereIndices;
-				counter += 0.1;
+				subsphereIndices.push_back(1); // 1 = particles; 0 = spheres
+				subsphereIndices.push_back((j * m_numParticles) * 2 + i * 2);
+				subsphereIndices.push_back(2*j * m_numParticles + (i + 1) * 2);
+				subsphereIndices.push_back(((j + 1) * m_numParticles) * 2 + i * 2);
+				subsphereIndices.push_back(((j + 1) * m_numParticles) * 2 + (i + 1) * 2);
+				cerr << subsphereIndices[0] << " " << subsphereIndices[1] << " " <<  subsphereIndices[2] << " " << subsphereIndices[3] << "\n";
+				allSpheres[counter] = subsphereIndices;
+				counter += 1;
 			}
 			
 		}
 		
+		vector<int> starting;
+		starting.push_back(5);
+		starting.push_back(7);
+		starting.push_back(13);
+		starting.push_back(15);
+		for (int i = 1; i < 5; i++){
+			for (int j = 0; j < starting.size(); j++){
+				vector<int> innerSpheres;
+				innerSpheres.push_back(0);
+				innerSpheres.push_back(starting[0]);
+				innerSpheres.push_back(starting[0]+1);
+				innerSpheres.push_back(starting[0]+4);
+				innerSpheres.push_back(starting[0]+5);
+				allSpheres[i] = innerSpheres;
+				innerSpheres.clear();
+			}
+		}
+
+		vector<int> zeroSubspheres;
+		zeroSubspheres.push_back(0);
+		zeroSubspheres.push_back(1);
+		zeroSubspheres.push_back(2);
+		zeroSubspheres.push_back(3);
+		zeroSubspheres.push_back(4);
+
+		allSpheres[0] = zeroSubspheres;
+		
+		
+
+	/*	
 		//mapping 4 medium subspheres to 16 subspheres INDICIES
 		map<float, vector<int>> level2ToLevel3;
 		float counter2 = 2.0;
@@ -376,6 +410,7 @@ void ClothSystem::sphereToParticleIndicies(){
 		level2Indicies.push_back(2.2);
 		level2Indicies.push_back(2.3);
 		level1ToLevel2[1.0] = level2Indicies;
+		*/
 		
 	}
 	else{
