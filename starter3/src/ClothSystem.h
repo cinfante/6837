@@ -19,6 +19,7 @@ public:
 	void drawI(int i);
 	void collision();
 	bool naiveBVH();
+	void sphereToParticleIndicies();
 
 private:
 	bool moving = false;

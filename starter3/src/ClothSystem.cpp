@@ -1,6 +1,7 @@
 #include "ClothSystem.h"
 #include <math.h>
 #include <iostream>
+#include <map>
 
 //TODO: Initialize here
 ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
@@ -321,8 +322,66 @@ bool ClothSystem::naiveBVH(){
 
 }
 
+//maps the sphere to the indicies of the particles it contains
+//sphere is determined by the position of the vector
+//i.e. 3rd entry is 3rd bounding sphere going from left to right, top to bottom
+void ClothSystem::sphereToParticleIndicies(){
 
+	//under the assumption we will only have 3 levels (including overall sphere as level 1)
+	//since our simulation will work max 8x8, 3 levels is 1 level before we're just checking particles
 
+	//this code is highly dependent on 8x8 system
+	
+	
+	
+	if (m_numParticles % 2 == 0){
+		float counter = 3.0;
+		//building the 16 subspheres
+		map<float, vector<int>> level3ToIndicies;
+		for (int j = 0; j < m_numParticles - 1; j += 2){
+			
+			for (int i = 0; i < m_numParticles - 1; i += 2){
+				vector<int> subsphereIndices;
+				subsphereIndices.push_back(j * m_numParticles + i * 2);
+				subsphereIndices.push_back((j + 1) * m_numParticles + i * 2);
+				subsphereIndices.push_back((j + 1) * m_numParticles + (i + 1) * 2);
+				subsphereIndices.push_back(j * m_numParticles + (i + 1) * 2);
+				level3ToIndicies[counter] = subsphereIndices;
+				counter += 0.1;
+			}
+			
+		}
+		
+		//mapping 4 medium subspheres to 16 subspheres INDICIES
+		map<float, vector<int>> level2ToLevel3;
+		float counter2 = 2.0;
+		for (int j = 0; j < 3; j+=2){
+			for (int i = 0; i < 3; i+=2){
+				
+				vector<int> level3Indicies;
+				level3Indicies.push_back(3.0 + 0.1 * (j * sqrt(level3ToIndicies.size()) + i));
+				level3Indicies.push_back(3.0 + 0.1 * (j+1 * sqrt(level3ToIndicies.size()) + i));
+				level3Indicies.push_back(3.0 + 0.1 * (j * sqrt(level3ToIndicies.size()) + i+1));
+				level3Indicies.push_back(3.0 + 0.1 * (j+1 * sqrt(level3ToIndicies.size()) + i));
+				level2ToLevel3[counter2] = level3Indicies;
+				counter2 += 0.1;
+			}
+		}
+		
+		//mapping 1 large sphere to 4 medium subspheres
+		map<float, vector<int>> level1ToLevel2;
+		vector<int> level2Indicies;
+		level2Indicies.push_back(2.0);
+		level2Indicies.push_back(2.1);
+		level2Indicies.push_back(2.2);
+		level2Indicies.push_back(2.3);
+		level1ToLevel2[1.0] = level2Indicies;
+		
+	}
+	else{
+
+	}
+}
 
 
 
