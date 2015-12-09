@@ -2,6 +2,7 @@
 #include <math.h>
 #include <iostream>
 #include <map>
+#include <limits.h>
 
 //TODO: Initialize here
 ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
@@ -71,6 +72,41 @@ ClothSystem::ClothSystem(int numParticles):ParticleSystem(pow(numParticles, 2))
 			col_norm.push_back(Vector3f(0,0,0));
 
 		}
+	}
+
+
+	sphereToParticleIndicies();
+	for (int i = 0; i < 21; i++){
+		vector<int> queue;
+		vector<int> listOfIndices;
+		queue.push_back(i);
+//		vector<int> sphereToInd[21];
+		while (queue.size() != 0){
+			int toCheck = queue.back();
+			queue.pop_back();
+			vector<int> mappedTo = allSpheres[toCheck];
+			if (mappedTo.size() == 0){
+				std::cout << "WAT?!?!" << std::endl;
+			}
+			if (mappedTo[0] == 1){
+				for (int j = 1; j < mappedTo.size(); j++){
+					listOfIndices.push_back(mappedTo[j]);
+				}
+			}
+			else{
+				for (int k = 1; k < mappedTo.size(); k++){
+					queue.push_back(mappedTo[k]);
+					if (mappedTo[k] == 0){
+						std::cout << std::endl << toCheck << std::endl;
+					}
+					std::cout << mappedTo[k] << " ";
+				}
+			}
+			std::cout << "HA ";
+		}
+
+		sphereToInd[i] = listOfIndices;
+		
 	}
 	
 }
@@ -165,18 +201,18 @@ vector<Vector3f> ClothSystem::evalF(vector<Vector3f> state)
 	//f[2*pow(m_vVecState.size()/2,0.5)-1] = Vector3f(0.0,0.0,0.0);
 	if (moving){
 		//counter++;
-		if (counter < 800){
+		if (counter < 1000){
 			//move forward
 			counter++;
-			f[0] = Vector3f(-0.5,0.0,-0.5);
+			f[0] = Vector3f(-0.1,0.0,-0.1);
 			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,1.0);
 		}
-		else if (counter < 1600){
-			f[0] = Vector3f(0.5,0.0,0.5);
+		else if (counter < 2000){
+			f[0] = Vector3f(0.1,0.0,0.1);
 			//f[2*pow(m_vVecState.size()/2,0.5)-2] = Vector3f(0.0,0.0,-1.0);
 			counter++;
 		}
-		if (counter >= 1600){
+		if (counter >= 2000){
 			counter = 0;
 		}
 	}
@@ -194,12 +230,25 @@ void ClothSystem::draw()
 	//glutSolidSphere(0.075f, 10.0f, 10.0f);
 	//glPopMatrix();
 //	naiveBVH();
-	sphereToParticleIndicies();
+	//sphereToParticleIndicies();
+	/* // Need to modify collision
 	if (naiveBVH()){
 		collision();
 	}
+	*/
 	//std::cout << "first" << std::endl;
-
+	vector<int> first;
+	first.push_back(0);
+	first.push_back(0);
+	
+	vector<int> partInd = recursiveBVH(first);
+	/*
+	for (int i = 0; i < 129; i+=2){
+		partInd.push_back(i);
+	}
+	*/
+	collisionBVH(partInd);
+	//collision();
 	for (int i = 0; i < m_vVecState.size()/2.; i++) {
 		
 		Vector3f pos = m_vVecState[2*i] ;//  position of particle i. YOUR CODE HERE
@@ -272,18 +321,58 @@ void ClothSystem::collision(){
 
 		}
 	}
-	cerr << counter << "\n";
 
 }
 
-bool ClothSystem::naiveBVH(){
+
+void ClothSystem::collisionBVH(vector<int> partInd){
+	Vector3f org = Vector3f(1.0f, -2.0f, 1.0f);
+	float r = 1.0f;
+	std::cout << "collisionBVH " << partInd.size() << std::endl;
+	for (int i = 0; i < partInd.size(); i++){
+		
+		int index = partInd[i];
+		std::cout << index << " ";
+		Vector3f part = m_vVecState[index];
+		float pos = pow(-org.x()+part.x(),2)+pow(-org.y()+part.y(),2)+pow(-org.z()+part.z(),2);
+		if (pos < pow(r,2)){
+			Vector3f unit = (part-org).normalized();
+			Vector3f newPos = r*unit + org;
+			m_vVecState[index] = newPos;
+			part_col[index/2] = true;
+			col_norm[index/2] = unit;
+		}
+		else{
+			
+			part_col[index/2] = false;
+		}
+	}
+	std::cout << std::endl;
+
+}
+
+Vector4f ClothSystem::naiveBVH(vector<int> indices){
 
 	float staticSphereRadius = 1.0f;
 	Vector3f staticSphereCenter = Vector3f(1.0f,-2.0f,1.0f);
 
 	Vector3f sphereCenter;
-	Vector3f firstParticlePos = m_vVecState[0];
-	Vector3f lastParticlePos = m_vVecState[2 * (pow(m_numParticles,2) - 1)];
+	
+	int minInd = INT_MAX;
+	int maxInd = INT_MIN;
+
+	for (int i = 0; i < indices.size(); i++){
+		int val = indices[i];
+		if (val < minInd){
+			minInd = val;
+		}
+		if (val > maxInd){
+			maxInd = val;
+		}
+	
+	}
+	Vector3f firstParticlePos = m_vVecState[minInd];
+	Vector3f lastParticlePos = m_vVecState[maxInd];
 	
 
 	
@@ -298,21 +387,26 @@ bool ClothSystem::naiveBVH(){
 		sphereCenter = Vector3f(centerX, centerY, centerZ);
 	}
 	else{
-		Vector3f sphereCenter = m_vVecState[pow(m_numParticles,2.0f) - 1];
+		cerr  << "HA" << '\n';
+//		Vector3f sphereCenter = m_vVecState[pow(m_numParticles,2.0f) - 1];
 //		cerr << "CENTER " << lastParticlePos.x() << " " << lastParticlePos.y() << " " << lastParticlePos.z() << "\n";
 	}	
+	
 	float firstPow = pow(lastParticlePos.x() - sphereCenter.x(),2.0f);
 	float secondPow = pow(lastParticlePos.y() - sphereCenter.y(),2.0f);
 	float thirdPow = pow(lastParticlePos.z() - sphereCenter.z(),2.0f);
 	float sphereRadius = sqrt(firstPow + secondPow + thirdPow);
-	
+	/*
 	Vector3f distanceVector = sphereCenter - staticSphereCenter;
 
 	float distanceBetweenCenters = distanceVector.abs();
 	float radiiSum = staticSphereRadius + sphereRadius;
-	
-	//cerr << radiiSum << " -------- " << distanceBetweenCenters << "\n";
+	*/
+	Vector4f toReturn = Vector4f(sphereCenter,1);// sphereRadius);
+	return toReturn;
 
+	//cerr << radiiSum << " -------- " << distanceBetweenCenters << "\n";
+	/*
 	if (radiiSum > distanceBetweenCenters){
 	
 		cerr << "TRUE\n";
@@ -320,6 +414,7 @@ bool ClothSystem::naiveBVH(){
 	}
 	//cerr << "FALSE\n";
 	return false;
+	*/
 
 }
 
@@ -338,7 +433,7 @@ void ClothSystem::sphereToParticleIndicies(){
 	if (m_numParticles == 8){
 		int counter = 5;
 		//building the 16 subspheres
-		map<int, vector<int>> allSpheres;
+		//map<int, vector<int>> allSpheres;
 		for (int j = 0; j < m_numParticles - 1; j += 2){
 			
 			for (int i = 0; i < m_numParticles - 1; i += 2){
@@ -362,14 +457,15 @@ void ClothSystem::sphereToParticleIndicies(){
 		starting.push_back(13);
 		starting.push_back(15);
 		for (int i = 1; i < 5; i++){
+			//vector<int> innerSpheres;
 			for (int j = 0; j < starting.size(); j++){
 				vector<int> innerSpheres;
 				innerSpheres.push_back(0);
-				innerSpheres.push_back(starting[0]);
-				innerSpheres.push_back(starting[0]+1);
-				innerSpheres.push_back(starting[0]+4);
-				innerSpheres.push_back(starting[0]+5);
-				allSpheres[i] = innerSpheres;
+				innerSpheres.push_back(starting[j]);
+				innerSpheres.push_back(starting[j]+1);
+				innerSpheres.push_back(starting[j]+4);
+				innerSpheres.push_back(starting[j]+5);
+				allSpheres[j+1] = innerSpheres;
 				innerSpheres.clear();
 			}
 		}
@@ -382,6 +478,7 @@ void ClothSystem::sphereToParticleIndicies(){
 		zeroSubspheres.push_back(4);
 
 		allSpheres[0] = zeroSubspheres;
+		std::cout << "end of thing" << std::endl;
 		
 		
 
@@ -414,11 +511,45 @@ void ClothSystem::sphereToParticleIndicies(){
 		
 	}
 	else{
-
+		std::cout << "No" << std::endl;
 	}
 }
 
+vector<int> ClothSystem::recursiveBVH(vector<int> spheres){
+	
+	vector<int> collidedParticles;
+	if (spheres[0] == 1){
+		for (int i = 1; i < spheres.size(); i++){
+			collidedParticles.push_back(spheres[i]);
+		}
+	}
+	else{
 
+		for (int i = 1; i < spheres.size(); i++){
+			vector<int> particles = sphereToInd[spheres[i]];
+			Vector4f rc = naiveBVH(particles);
+		
+			Vector3f staticSphereCenter = Vector3f(1.0f, -2.0f, 1.0f);
+			float staticSphereRadius = 1.0f;
+			Vector3f distanceVector = rc.xyz() - staticSphereCenter;
+			float distanceBetweenCenters = distanceVector.abs();
+			float radiiSum = staticSphereRadius + rc.w();
+			
+			if (radiiSum > distanceBetweenCenters){
+				//collision!
+				std::cout << "Collision! "<< std::endl;
+				std::cout << spheres[i] << std::endl;
+				vector<int> returned = recursiveBVH(allSpheres[spheres[i]]);
+				for (int j = 0; j < returned.size(); j++){
+					collidedParticles.push_back(returned[j]);
+				}
+			}
+
+		}
+	}
+	std::cout << "end of this recursion" << std::endl;
+	return collidedParticles;
+}
 
 
 

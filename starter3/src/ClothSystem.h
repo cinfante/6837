@@ -3,6 +3,7 @@
 
 #include "extra.h"
 #include <vector>
+#include <map>
 
 #include "particleSystem.h"
 
@@ -18,8 +19,10 @@ public:
 	void wireframe();
 	void drawI(int i);
 	void collision();
-	bool naiveBVH();
+	Vector4f naiveBVH(vector<int> indices);
 	void sphereToParticleIndicies();
+	vector<int> recursiveBVH(vector<int> spheres);
+	void collisionBVH(vector<int> partInd);
 
 private:
 	bool moving = false;
@@ -27,6 +30,8 @@ private:
 	bool drawBool = true;
 	vector<bool> part_col;
 	vector<Vector3f> col_norm;
+	map<int,vector<int>> allSpheres;
+	vector<int> sphereToInd[21];
 };
 
 #endif
